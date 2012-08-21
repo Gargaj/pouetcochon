@@ -1,0 +1,3 @@
+content pouetcochon chrome/content/
+
+overlay chrome://browser/content/browser.xul chrome://pouetcochon/content/pouetcochon.xul
