@@ -18,9 +18,7 @@ function popup(title, msg) {
 function getDownload(a,dl) {
   var i = a.length;
   while (i--) {
-    if (a[i].dl === dl) {
-      return a[i];
-    }
+    if (a[i].dl === dl) return a[i];
   }
   return null;
 }
@@ -38,6 +36,9 @@ XMLDocument.prototype.getNode = function(str) {
     return p[0].childNodes[0].nodeValue;
   return "_unknown_";
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// from http://stackoverflow.com/questions/901115/get-query-string-values-in-javascript
 function parseQueryString(query) {
   var match,
       pl     = /\+/g,  // Regex for replacing addition symbol with a space
@@ -51,6 +52,7 @@ function parseQueryString(query) {
   }
   return urlParams;
 };
+
 function sanitize(str)
 {
   return str.replace(/([^a-zA-Z0-9\-\_\.]+)/g,"-")
@@ -107,11 +109,7 @@ window.addEventListener('load', function () {
         {
           dlObj.wnd.close();
           
-          //alert("FINISHED LOL: " + dl.target.prePath + dl.target.path);
-          //LOG( "arrayRemove 1: " + myDownloads.length );
           arrayRemove( myDownloads, myDownloads.indexOf( dl ) );
-          //LOG( "arrayRemove 2: " + myDownloads.length );
-          //LOG( "ZIP: " + dl.target.path.substring( dl.target.path.length - 4 ) );
           if ( prefBranch.getBoolPref("extractAfterDownload") && dl.target.path.substring( dl.target.path.length - 4 ) == ".zip")
           {
             var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"].createInstance(Components.interfaces.nsIZipReader);
@@ -123,12 +121,10 @@ window.addEventListener('load', function () {
             if (!dir.exists()) {
               dir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, defaultPerm);
             }
-            //alert( zipReader.findEntries(null) ); 
             var files = zipReader.findEntries(null);
             var executables = [];
             do {
               var fileString = files.getNext();
-              //LOG( fileString );
               var entry = zipReader.getEntry(fileString);
               if (entry.isDirectory)
               {
@@ -144,7 +140,6 @@ window.addEventListener('load', function () {
               }
             } while (files.hasMore());
             
-            //LOG( "NOW THE FILES" );
             files = zipReader.findEntries(null);
             do {
               var fileString = files.getNext();
@@ -159,8 +154,7 @@ window.addEventListener('load', function () {
               {
                 loc.append(fileComps[i]);
               }
-              //LOG( "loc: " + loc.path );
-
+              
               zipReader.extract(fileString, loc);
 
               if (xulRuntime.OS == "WINNT")
@@ -193,7 +187,6 @@ window.addEventListener('load', function () {
                   file.initWithPath( environment.get("ComSpec") );
                   
                   var cmd = 'start "" /D"' + dir.path + '" "' + executables[0].path + '"';
-                  //args = ["/C", cmd];
                   args = ["/C", "start", "fake title", "/D", dir.path, executables[0].path ];
                 }
                 LOG("args = "+args.join(","));
@@ -267,11 +260,11 @@ window.addEventListener('load', function () {
         "*grunz*", // de
         "*grunz*", // de
         "*röh*",   // fi
-        "*øf*",    // dk        
+        "*of*",    // dk        
       ]
       span.innerHTML = "[<span id='fakeDownloadLink' style='color:red;cursor:pointer;'>"+snort[ Math.floor(Math.random()*snort.length) ]+"</span>] " + span.innerHTML;
       var fake = doc.getElementById("fakeDownloadLink");
-      fake.addEventListener('click',function(evClick){
+      if (fake) fake.addEventListener('click',function(evClick){
       
         var persist         = Components.classes['@mozilla.org/embedding/browser/nsWebBrowserPersist;1'].createInstance(Components.interfaces.nsIWebBrowserPersist);
         var localFile       = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
@@ -291,7 +284,6 @@ window.addEventListener('load', function () {
           var url = parseQueryString( link.href.substring( link.href.indexOf("?") + 1 ) );
           originalUrl = url.url;
         }
-        //LOG("OURL = " + originalUrl);
         var urlParams = parseQueryString( doc.location.search.substring(1) );
         var xnfoUrl = "http://www.pouet.net/export/prod.xnfo.php?which=" + urlParams.which;
 
@@ -308,8 +300,6 @@ window.addEventListener('load', function () {
           {
             var xml = xhr.responseXML;
             
-            //var desktop = dirService.get("Desk", Components.interfaces.nsIFile);
-            //var localPath = desktop.path + "\\demos\\[YEAR]\\[PARTY]\\[COMPO]";
             var localPath = prefBranch.getCharPref("savePath");
             localPath = localPath.replace("[FIRSTLETTER]",sanitize(xml.getNode("name").charAt(0)));
             localPath = localPath.replace("[GROUP]",sanitize(xml.getNode("group")));
@@ -320,21 +310,14 @@ window.addEventListener('load', function () {
             var filename = originalUrl.substring( originalUrl.lastIndexOf("/") + 1 );
             
             localFile.initWithPath(localPath);             
-            //LOG("path = [" + localPath + "]");
             if (!localFile.exists()) {
               localFile.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, defaultPerm);
             }
             localFile.append(filename);
-            //localPath += "\\" + filename;
-            //localPath = "file://" + localPath.replace(/\\/g, "/").replace(/\s/g, "%20");
-            //localFile.initWithPath(localPath);             
-            //fpHandler.newFileURI(localFile);
-            //LOG("path = [" + localPath + "]");
-            var localURI = fpHandler.newFileURI(localFile);//ioService.newURI(localURI, null, null);
-            //LOG("uri = [" + localURI.path + "]");
+            var localURI = fpHandler.newFileURI(localFile);
             
             var download = downloadManager.addDownload(
-              0, //nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
+              Components.interfaces.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
               ioService.newURI(originalUrl, null, null),
               localURI,
               "Downloading demo: " + originalUrl,
@@ -352,8 +335,6 @@ window.addEventListener('load', function () {
               localURI);            
            
             myDownloads.push( {id:urlParams.which,dl:download,wnd:dlWnd,name:xml.getNode("name")} );
-            
-            //alert("Demo download started: " + filename); 
             
             popup("PouëtCochon","Demo download started: " + filename);
                                 
