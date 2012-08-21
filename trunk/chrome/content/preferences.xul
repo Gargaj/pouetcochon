@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+
+<prefwindow id="pouetcochonPreferences"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  style="width: 50em; min-height: 10em;">
+
+  <prefpane id="paneProfiles" label="Preferences">
+    <preferences>
+      <preference id="pouetcochonSaveLocation" name="extensions.pouetcochon.savePath" type="unichar" />
+      <preference id="pouetcochonExtractAfterDownload" name="extensions.pouetcochon.extractAfterDownload" type="bool" />
+      <preference id="pouetcochonRunAfterExtract" name="extensions.pouetcochon.runAfterExtract" type="bool" />
+    </preferences>
+
+    <vbox>
+    	<hbox align="center">
+    		<label value="Saving path:" />
+    		<textbox preference="pouetcochonSaveLocation" style='width: 40em'/>
+    	</hbox>
+      
+      <hbox>
+        <vbox style="width: 25em;">
+        	<label value="Variables:" style='font-weight:bold' />
+        	<label value="[GROUP] - Group name" />
+        	<label value="[PARTY] - Party name" />
+        	<label value="[YEAR] - Party year" />
+        	<label value="[COMPO] - Compo name" />
+        </vbox>
+        <vbox>
+        	<label value="Events:" style='font-weight:bold' />
+        	<hbox align="center">
+        		<checkbox preference="pouetcochonExtractAfterDownload"/>
+        		<label value="Extract demo after downloading" />
+        	</hbox>
+        	<hbox align="center">
+        		<checkbox preference="pouetcochonRunAfterExtract"/>
+        		<label value="Run demo after extracting" />
+        	</hbox>
+        </vbox>
+      </hbox>    
+    </vbox>
+  </prefpane>
+    
+</prefwindow>

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+
+<window
+    id="pouetcochonProgressWindow"
+    title="Downloading demo..."
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    style="width: 50em; height: 10em;">
+
+  <vbox>
+    <hbox align="center">
+      <progressmeter id="downloadProgress" mode="determined" value="0" style="width:44em"/>
+      <label value="" id="downloadProgressNum" style="text-align: right" />
+    </hbox>
+    <hbox align="center">
+    	<label value="Filename:" style='font-weight:bold' />
+    	<label value="" id="downloadFilename" />
+    </hbox>
+    <hbox align="center">
+    	<label value="Download:" style='font-weight:bold' />
+    	<label value="" id="downloadNumericProgress" />
+    </hbox>
+  </vbox>
+
+</window>
