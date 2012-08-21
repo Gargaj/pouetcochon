@@ -5,16 +5,20 @@
     id="pouetcochonProgressWindow"
     title="Downloading demo..."
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    style="width: 50em; height: 10em;">
+    style="width: 60em; height: 10em;">
 
   <vbox>
     <hbox align="center">
-      <progressmeter id="downloadProgress" mode="determined" value="0" style="width:44em"/>
+      <progressmeter id="downloadProgress" mode="determined" value="0" style="width:54em"/>
       <label value="" id="downloadProgressNum" style="text-align: right" />
     </hbox>
     <hbox align="center">
-    	<label value="Filename:" style='font-weight:bold' />
+    	<label value="Remote filename:" style='font-weight:bold' />
     	<label value="" id="downloadFilename" />
+    </hbox>
+    <hbox align="center">
+    	<label value="Local filename:" style='font-weight:bold' />
+    	<label value="" id="downloadLocalFilename" />
     </hbox>
     <hbox align="center">
     	<label value="Download:" style='font-weight:bold' />

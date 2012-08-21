@@ -222,6 +222,8 @@ window.addEventListener('load', function () {
         progNum.value = f.toFixed(2) + "%";
         var progFilename = dlObj.wnd.document.getElementById("downloadFilename");
         progFilename.value = dl.source.prePath + dl.source.path;
+        var progLocalFilename = dlObj.wnd.document.getElementById("downloadLocalFilename");
+        progLocalFilename.value = dl.target.prePath + dl.target.path;
         var progNumProg = dlObj.wnd.document.getElementById("downloadNumericProgress");
         progNumProg.value = sProg + " / " + sProgMax;        
       }
@@ -260,7 +262,7 @@ window.addEventListener('load', function () {
         "*grunz*", // de
         "*grunz*", // de
         "*röh*",   // fi
-        "*of*",    // dk        
+        "*&oslash;f*", // dk        
       ]
       span.innerHTML = "[<span id='fakeDownloadLink' style='color:red;cursor:pointer;'>"+snort[ Math.floor(Math.random()*snort.length) ]+"</span>] " + span.innerHTML;
       var fake = doc.getElementById("fakeDownloadLink");
