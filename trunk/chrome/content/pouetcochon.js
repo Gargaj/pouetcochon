@@ -163,7 +163,7 @@ window.addEventListener('load', function () {
 
               if (xulRuntime.OS == "WINNT")
               {
-                if (loc.leafName.indexOf(".exe") != -1)
+                if (loc.leafName.substring( loc.leafName.length - 4 ) == ".exe")
                 {
                   executables.push(loc);
                 }
