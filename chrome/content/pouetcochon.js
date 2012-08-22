@@ -57,7 +57,7 @@ function sanitize(str)
 {
   return str.replace(/([^a-zA-Z0-9\-\_\.]+)/g,"-")
          //.replace(/^\-+/,"")
-         .toLowerCase();    
+         .toLowerCase();
 }
 
 
@@ -67,15 +67,15 @@ window.addEventListener('load', function () {
 
   var downloadManager = Components.classes["@mozilla.org/download-manager;1"]  .getService(Components.interfaces.nsIDownloadManager);
   var ioService       = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-  var dirService      = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties); 
+  var dirService      = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
   var prefs           = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
   var environment     = Components.classes["@mozilla.org/process/environment;1"].getService(Components.interfaces.nsIEnvironment);
   var xulRuntime      = Components.classes["@mozilla.org/xre/app-info;1"].getService(Components.interfaces.nsIXULRuntime);
   var prefBranch      = prefs.getBranch("extensions.pouetcochon.");
-  var fpHandler       = ioService.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler); 
+  var fpHandler       = ioService.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
 
   var defaultPerm = 0755;
-  
+
   var LOG = Components.utils.reportError;
 
   if (prefBranch.prefHasUserValue("savePath") == false)
@@ -87,9 +87,9 @@ window.addEventListener('load', function () {
     desktop.append("[COMPO]");
     var path = (desktop.prePath ? desktop.prePath : "") + desktop.path;
     LOG("path = " + path);
-    prefBranch.setCharPref("savePath", path ); 
+    prefBranch.setCharPref("savePath", path );
   }
-  
+
   downloadManager.addListener({
     onDownloadStateChange : function(state, dl) {
       if (dl.state == Components.interfaces.nsIDownloadManager.DOWNLOAD_CANCELED)
@@ -108,7 +108,7 @@ window.addEventListener('load', function () {
         if (dlObj)
         {
           dlObj.wnd.close();
-          
+
           arrayRemove( myDownloads, myDownloads.indexOf( dl ) );
           if ( prefBranch.getBoolPref("extractAfterDownload") && dl.target.path.substring( dl.target.path.length - 4 ) == ".zip")
           {
@@ -121,8 +121,9 @@ window.addEventListener('load', function () {
             if (!dir.exists()) {
               dir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, defaultPerm);
             }
-            var files = zipReader.findEntries(null);
             var executables = [];
+
+            var files = zipReader.findEntries(null);
             do {
               var fileString = files.getNext();
               var entry = zipReader.getEntry(fileString);
@@ -139,22 +140,25 @@ window.addEventListener('load', function () {
                 }
               }
             } while (files.hasMore());
-            
+
             files = zipReader.findEntries(null);
             do {
               var fileString = files.getNext();
               var entry = zipReader.getEntry(fileString);
               if (entry.isDirectory)
                 continue;
-                
+
               var fileComps = fileString.split(/[\\\/]/);
-              
+
               var loc = dir.clone();
               for(var i = 0; i < fileComps.length; i++)
               {
                 loc.append(fileComps[i]);
+                if (i < fileComps.length - 1 && !loc.exists()) {
+                  loc.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, defaultPerm);
+                }
               }
-              
+
               zipReader.extract(fileString, loc);
 
               if (xulRuntime.OS == "WINNT")
@@ -185,7 +189,7 @@ window.addEventListener('load', function () {
                   // we have to do this because nsiProcess doesn't allow changing the working directory, so we use start /D
                   file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
                   file.initWithPath( environment.get("ComSpec") );
-                  
+
                   var cmd = 'start "" /D"' + dir.path + '" "' + executables[0].path + '"';
                   args = ["/C", "start", "fake title", "/D", dir.path, executables[0].path ];
                 }
@@ -215,7 +219,7 @@ window.addEventListener('load', function () {
       {
         var f = sProg * 100 / sProgMax;
         dlObj.wnd.document.title = "Downloading demo: " + dlObj.name + " ("+f.toFixed(2) + "%)";
-        
+
         var progBar = dlObj.wnd.document.getElementById("downloadProgress");
         progBar.value = f;
         var progNum = dlObj.wnd.document.getElementById("downloadProgressNum");
@@ -225,7 +229,7 @@ window.addEventListener('load', function () {
         var progLocalFilename = dlObj.wnd.document.getElementById("downloadLocalFilename");
         progLocalFilename.value = dl.target.prePath + dl.target.path;
         var progNumProg = dlObj.wnd.document.getElementById("downloadNumericProgress");
-        progNumProg.value = sProg + " / " + sProgMax;        
+        progNumProg.value = sProg + " / " + sProgMax;
       }
     },
     onSecurityChange : function(prog, req, state, dl) { },
@@ -239,9 +243,9 @@ window.addEventListener('load', function () {
       'pouetcochonPrefs',
       'chrome,titlebar,toolbar,centerscreen,dialog=no'
     );
-  }, false);  
+  }, false);
   gBrowser.addEventListener('DOMContentLoaded', function(ev) {
-  
+
     var doc = ev.originalTarget;
 
     if(doc.location.href.search("pouet.net") == -1 && doc.location.href.search("pouet.scene.org") == -1)
@@ -252,7 +256,7 @@ window.addEventListener('load', function () {
 
     var span = doc.getElementById("mainDownload");
     var link = doc.getElementById("mainDownloadLink");
-    
+
     if (link)
     {
       var snort = [
@@ -262,15 +266,15 @@ window.addEventListener('load', function () {
         "*grunz*", // de
         "*grunz*", // de
         "*röh*",   // fi
-        "*&oslash;f*", // dk        
+        "*&oslash;f*", // dk
       ]
       span.innerHTML = "[<span id='fakeDownloadLink' style='color:red;cursor:pointer;'>"+snort[ Math.floor(Math.random()*snort.length) ]+"</span>] " + span.innerHTML;
       var fake = doc.getElementById("fakeDownloadLink");
       if (fake) fake.addEventListener('click',function(evClick){
-      
+
         var persist         = Components.classes['@mozilla.org/embedding/browser/nsWebBrowserPersist;1'].createInstance(Components.interfaces.nsIWebBrowserPersist);
         var localFile       = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-      
+
         var originalUrl = link.href;
         if (link.href.indexOf("scene.org/file.php") != -1)
         {
@@ -281,7 +285,7 @@ window.addEventListener('load', function () {
             originalUrl = "ftp://ftp.scene.org/pub" + originalUrl;
           }
         }
-        else if (link.href.indexOf("scene.org/file_dl.php") != -1) 
+        else if (link.href.indexOf("scene.org/file_dl.php") != -1)
         {
           var url = parseQueryString( link.href.substring( link.href.indexOf("?") + 1 ) );
           originalUrl = url.url;
@@ -294,30 +298,30 @@ window.addEventListener('load', function () {
           'pouetcochonDownload-' + urlParams.which,
           'chrome,titlebar,centerscreen,dialog=no,close=no'
         );
-        
+
         var xhr = new XMLHttpRequest();
         xhr.open("GET", xnfoUrl, false);
         xhr.onreadystatechange = function(){
           if (xhr.readyState == 4)
           {
             var xml = xhr.responseXML;
-            
+
             var localPath = prefBranch.getCharPref("savePath");
             localPath = localPath.replace("[FIRSTLETTER]",sanitize(xml.getNode("name").charAt(0)));
             localPath = localPath.replace("[GROUP]",sanitize(xml.getNode("group")));
             localPath = localPath.replace("[PARTY]",sanitize(xml.getNode("party")));
             localPath = localPath.replace("[YEAR]",sanitize(xml.getNode("date").substring( xml.getNode("date").length - 4 )));
             localPath = localPath.replace("[COMPO]",sanitize(xml.getNode("compo")));
-            
+
             var filename = originalUrl.substring( originalUrl.lastIndexOf("/") + 1 );
-            
-            localFile.initWithPath(localPath);             
+
+            localFile.initWithPath(localPath);
             if (!localFile.exists()) {
               localFile.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, defaultPerm);
             }
             localFile.append(filename);
             var localURI = fpHandler.newFileURI(localFile);
-            
+
             var download = downloadManager.addDownload(
               Components.interfaces.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
               ioService.newURI(originalUrl, null, null),
@@ -329,17 +333,17 @@ window.addEventListener('load', function () {
               persist);
             persist.progressListener = download;
             persist.saveURI(
-              ioService.newURI(originalUrl, null, null), 
-              null, 
-              null, 
-              null, 
-              "", 
-              localURI);            
-           
+              ioService.newURI(originalUrl, null, null),
+              null,
+              null,
+              null,
+              "",
+              localURI);
+
             myDownloads.push( {id:urlParams.which,dl:download,wnd:dlWnd,name:xml.getNode("name")} );
-            
+
             popup("PouëtCochon","Demo download started: " + filename);
-                                
+
           }
         }
         xhr.send(null);
