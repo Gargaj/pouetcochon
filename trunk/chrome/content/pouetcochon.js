@@ -86,13 +86,13 @@ window.addEventListener('load', function () {
     desktop.append("[PARTY]");
     desktop.append("[COMPO]");
     var path = (desktop.prePath ? desktop.prePath : "") + desktop.path;
-    LOG("path = " + path);
     prefBranch.setCharPref("savePath", path );
   }
 
   downloadManager.addListener({
     onDownloadStateChange : function(state, dl) {
-      if (dl.state == Components.interfaces.nsIDownloadManager.DOWNLOAD_CANCELED)
+      if (dl.state == Components.interfaces.nsIDownloadManager.DOWNLOAD_CANCELED 
+       || dl.state == Components.interfaces.nsIDownloadManager.DOWNLOAD_FAILED)
       {
         var dlObj = getDownload(myDownloads,dl);
         if (dlObj)
@@ -116,7 +116,6 @@ window.addEventListener('load', function () {
             var localFile = fpHandler.getFileFromURLSpec( dl.target.prePath + dl.target.path );
             zipReader.open(localFile);
             var dir = localFile.parent.clone();
-            LOG("localFile.leafName=" + localFile.leafName);
             dir.append( localFile.leafName.replace(".zip","") );
             if (!dir.exists()) {
               dir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, defaultPerm);
@@ -193,7 +192,6 @@ window.addEventListener('load', function () {
                   var cmd = 'start "" /D"' + dir.path + '" "' + executables[0].path + '"';
                   args = ["/C", "start", "fake title", "/D", executables[0].parent.path, executables[0].path ];
                 }
-                LOG("args = "+args.join(","));
                 process.init(file);
                 process.run(false, args, args.length);
               }
@@ -276,6 +274,13 @@ window.addEventListener('load', function () {
         var localFile       = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 
         var originalUrl = link.href;
+        var filename = originalUrl.substring( originalUrl.lastIndexOf("/") + 1 );
+        if (!filename.length)
+        {
+          alert("No valid filename found.");
+          return true;
+        }
+        
         if (link.href.indexOf("scene.org/file.php") != -1)
         {
           var url = parseQueryString( link.href.substring( link.href.indexOf("?") + 1 ) );
@@ -312,8 +317,6 @@ window.addEventListener('load', function () {
             localPath = localPath.replace("[PARTY]",sanitize(xml.getNode("party")));
             localPath = localPath.replace("[YEAR]",sanitize(xml.getNode("date").substring( xml.getNode("date").length - 4 )));
             localPath = localPath.replace("[COMPO]",sanitize(xml.getNode("compo")));
-
-            var filename = originalUrl.substring( originalUrl.lastIndexOf("/") + 1 );
 
             localFile.initWithPath(localPath);
             if (!localFile.exists()) {
