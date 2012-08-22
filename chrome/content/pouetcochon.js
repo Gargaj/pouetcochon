@@ -191,7 +191,7 @@ window.addEventListener('load', function () {
                   file.initWithPath( environment.get("ComSpec") );
 
                   var cmd = 'start "" /D"' + dir.path + '" "' + executables[0].path + '"';
-                  args = ["/C", "start", "fake title", "/D", dir.path, executables[0].path ];
+                  args = ["/C", "start", "fake title", "/D", executables[0].parent.path, executables[0].path ];
                 }
                 LOG("args = "+args.join(","));
                 process.init(file);
