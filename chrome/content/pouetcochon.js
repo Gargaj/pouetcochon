@@ -274,12 +274,6 @@ window.addEventListener('load', function () {
         var localFile       = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 
         var originalUrl = link.href;
-        var filename = originalUrl.substring( originalUrl.lastIndexOf("/") + 1 );
-        if (!filename.length)
-        {
-          alert("No valid filename found.");
-          return true;
-        }
         
         if (link.href.indexOf("scene.org/file.php") != -1)
         {
@@ -295,6 +289,14 @@ window.addEventListener('load', function () {
           var url = parseQueryString( link.href.substring( link.href.indexOf("?") + 1 ) );
           originalUrl = url.url;
         }
+        
+        var filename = originalUrl.substring( originalUrl.lastIndexOf("/") + 1 );
+        if (!filename.length)
+        {
+          alert("No valid filename found.");
+          return true;
+        }
+        
         var urlParams = parseQueryString( doc.location.search.substring(1) );
         var xnfoUrl = "http://www.pouet.net/export/prod.xnfo.php?which=" + urlParams.which;
 
