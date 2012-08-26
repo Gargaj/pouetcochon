@@ -110,7 +110,7 @@ window.addEventListener('load', function () {
           dlObj.wnd.close();
 
           arrayRemove( myDownloads, myDownloads.indexOf( dl ) );
-          if ( prefBranch.getBoolPref("extractAfterDownload") && dl.target.path.substring( dl.target.path.length - 4 ) == ".zip")
+          if ( prefBranch.getBoolPref("extractAfterDownload") && dl.target.path.substring( dl.target.path.length - 4 ).toLowerCase() == ".zip")
           {
             var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"].createInstance(Components.interfaces.nsIZipReader);
             var localFile = fpHandler.getFileFromURLSpec( dl.target.prePath + dl.target.path );
@@ -162,7 +162,7 @@ window.addEventListener('load', function () {
 
               if (xulRuntime.OS == "WINNT")
               {
-                if (loc.leafName.substring( loc.leafName.length - 4 ) == ".exe")
+                if (loc.leafName.substring( loc.leafName.length - 4 ).toLowerCase() == ".exe")
                 {
                   executables.push(loc);
                 }
