@@ -261,16 +261,12 @@ window.addEventListener('load', function () {
         "*röff*",  // hu
         "*groin*", // fr
         "*grunz*", // de
-        "*grunz*", // de
         "*röh*",   // fi
         "*&oslash;f*", // dk
       ]
       span.innerHTML = "[<span id='fakeDownloadLink' style='color:red;cursor:pointer;'>"+snort[ Math.floor(Math.random()*snort.length) ]+"</span>] " + span.innerHTML;
       var fake = doc.getElementById("fakeDownloadLink");
       if (fake) fake.addEventListener('click',function(evClick){
-
-        var persist         = Components.classes['@mozilla.org/embedding/browser/nsWebBrowserPersist;1'].createInstance(Components.interfaces.nsIWebBrowserPersist);
-        var localFile       = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
 
         var originalUrl = link.href;
         
@@ -318,6 +314,9 @@ window.addEventListener('load', function () {
             localPath = localPath.replace("[PARTY]",sanitize(XMLgetNode(xml,"party")));
             localPath = localPath.replace("[YEAR]",sanitize(XMLgetNode(xml,"date").substring( XMLgetNode(xml,"date").length - 4 )));
             localPath = localPath.replace("[COMPO]",sanitize(XMLgetNode(xml,"compo")));
+
+            var persist   = Components.classes['@mozilla.org/embedding/browser/nsWebBrowserPersist;1'].createInstance(Components.interfaces.nsIWebBrowserPersist);
+            var localFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
 
             localFile.initWithPath(localPath);
             if (!localFile.exists()) {
