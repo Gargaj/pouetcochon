@@ -6,62 +6,61 @@ no license
 
 */
 
-function popup(title, msg) {
-  var image = null;
-  var win = Components.classes['@mozilla.org/embedcomp/window-watcher;1'].
-                      getService(Components.interfaces.nsIWindowWatcher).
-                      openWindow(null, 'chrome://global/content/alerts/alert.xul',
-                                  '_blank', 'chrome,titlebar=no,popup=yes', null);
-  win.arguments = [image, title, msg, false, ''];
-}
-
-function getDownload(a,dl) {
-  var i = a.length;
-  while (i--) {
-    if (a[i].dl === dl) return a[i];
-  }
-  return null;
-}
-
-function arrayRemove(a, from, to) {
-  var rest = a.slice((to || from) + 1 || a.length);
-  a.length = from < 0 ? a.length + from : from;
-  return a.push.apply(a, rest);
-};
-
-
-XMLDocument.prototype.getNode = function(str) {
-  var p = this.getElementsByTagName(str);
-  if (p.length)
-    return p[0].childNodes[0].nodeValue;
-  return "_unknown_";
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// from http://stackoverflow.com/questions/901115/get-query-string-values-in-javascript
-function parseQueryString(query) {
-  var match,
-      pl     = /\+/g,  // Regex for replacing addition symbol with a space
-      search = /([^&=]+)=?([^&]*)/g,
-      decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); };
-
-  var urlParams = {};
-  while (match = search.exec(query))
-  {
-    urlParams[decode(match[1])] = decode(match[2]);
-  }
-  return urlParams;
-};
-
-function sanitize(str)
-{
-  return str.replace(/([^a-zA-Z0-9\-\_\.]+)/g,"-")
-         //.replace(/^\-+/,"")
-         .toLowerCase();
-}
-
-
 window.addEventListener('load', function () {
+
+  function popup(title, msg) {
+    var image = null;
+    var win = Components.classes['@mozilla.org/embedcomp/window-watcher;1'].
+                        getService(Components.interfaces.nsIWindowWatcher).
+                        openWindow(null, 'chrome://global/content/alerts/alert.xul',
+                                    '_blank', 'chrome,titlebar=no,popup=yes', null);
+    win.arguments = [image, title, msg, false, ''];
+  }
+  
+  function getDownload(a,dl) {
+    var i = a.length;
+    while (i--) {
+      if (a[i].dl === dl) return a[i];
+    }
+    return null;
+  }
+  
+  function arrayRemove(a, from, to) {
+    var rest = a.slice((to || from) + 1 || a.length);
+    a.length = from < 0 ? a.length + from : from;
+    return a.push.apply(a, rest);
+  };
+  
+  
+  function XMLgetNode(xml,str) {
+    var p = xml.getElementsByTagName(str);
+    if (p.length)
+      return p[0].childNodes[0].nodeValue;
+    return "_unknown_";
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////////////////////////
+  // from http://stackoverflow.com/questions/901115/get-query-string-values-in-javascript
+  function parseQueryString(query) {
+    var match,
+        pl     = /\+/g,  // Regex for replacing addition symbol with a space
+        search = /([^&=]+)=?([^&]*)/g,
+        decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); };
+  
+    var urlParams = {};
+    while (match = search.exec(query))
+    {
+      urlParams[decode(match[1])] = decode(match[2]);
+    }
+    return urlParams;
+  };
+  
+  function sanitize(str)
+  {
+    return str.replace(/([^a-zA-Z0-9\-\_\.]+)/g,"-")
+           //.replace(/^\-+/,"")
+           .toLowerCase();
+  }
 
   var myDownloads = [];
 
@@ -307,18 +306,18 @@ window.addEventListener('load', function () {
         );
 
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", xnfoUrl, false);
+        xhr.open("GET", xnfoUrl, true);
         xhr.onreadystatechange = function(){
           if (xhr.readyState == 4)
           {
             var xml = xhr.responseXML;
 
             var localPath = prefBranch.getCharPref("savePath");
-            localPath = localPath.replace("[FIRSTLETTER]",sanitize(xml.getNode("name").charAt(0)));
-            localPath = localPath.replace("[GROUP]",sanitize(xml.getNode("group")));
-            localPath = localPath.replace("[PARTY]",sanitize(xml.getNode("party")));
-            localPath = localPath.replace("[YEAR]",sanitize(xml.getNode("date").substring( xml.getNode("date").length - 4 )));
-            localPath = localPath.replace("[COMPO]",sanitize(xml.getNode("compo")));
+            localPath = localPath.replace("[FIRSTLETTER]",sanitize(XMLgetNode(xml,"name").charAt(0)));
+            localPath = localPath.replace("[GROUP]",sanitize(XMLgetNode(xml,"group")));
+            localPath = localPath.replace("[PARTY]",sanitize(XMLgetNode(xml,"party")));
+            localPath = localPath.replace("[YEAR]",sanitize(XMLgetNode(xml,"date").substring( XMLgetNode(xml,"date").length - 4 )));
+            localPath = localPath.replace("[COMPO]",sanitize(XMLgetNode(xml,"compo")));
 
             localFile.initWithPath(localPath);
             if (!localFile.exists()) {
@@ -345,7 +344,7 @@ window.addEventListener('load', function () {
               "",
               localURI);
 
-            myDownloads.push( {id:urlParams.which,dl:download,wnd:dlWnd,name:xml.getNode("name")} );
+            myDownloads.push( {id:urlParams.which,dl:download,wnd:dlWnd,name:XMLgetNode(xml,"name")} );
 
             popup("PouëtCochon","Demo download started: " + filename);
 
