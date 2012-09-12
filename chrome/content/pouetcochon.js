@@ -185,7 +185,7 @@ window.addEventListener('load', function () {
                 if (xulRuntime.OS == "WINNT")
                 {
                   // we have to do this because nsiProcess doesn't allow changing the working directory, so we use start /D
-                  file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+                  file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
                   file.initWithPath( environment.get("ComSpec") );
 
                   var cmd = 'start "" /D"' + dir.path + '" "' + executables[0].path + '"';
@@ -270,7 +270,7 @@ window.addEventListener('load', function () {
       if (fake) fake.addEventListener('click',function(evClick){
 
         var persist         = Components.classes['@mozilla.org/embedding/browser/nsWebBrowserPersist;1'].createInstance(Components.interfaces.nsIWebBrowserPersist);
-        var localFile       = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+        var localFile       = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
 
         var originalUrl = link.href;
         
