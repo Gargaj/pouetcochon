@@ -6,7 +6,7 @@
     <menuitem 
       id="pouetcochonPreferencesMenu" 
       class="menuitem-iconic" 
-      insertafter="javascriptConsole" 
+      insertafter="menu_preferences" 
       label="PouëtCochon settings..." 
       image="chrome://pouetcochon/content/pouetcochon.gif"/>
   </menupopup>
