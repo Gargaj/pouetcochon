@@ -8,6 +8,8 @@ no license
 
 window.addEventListener('load', function () {
 
+  var LOG = console.log;
+  
   function popup(title, msg) {
     var image = null;
     var win = Components.classes['@mozilla.org/embedcomp/window-watcher;1'].
@@ -296,6 +298,9 @@ window.addEventListener('load', function () {
           alert("No valid filename found.");
           return true;
         }
+        LOG("before="+filename);
+        filename = filename.replace(/[\?\*\\]/gi,"_");
+        LOG("after="+filename);
         
         var urlParams = parseQueryString( doc.location.search.substring(1) );
         var xnfoUrl = "http://www.pouet.net/export/prod.xnfo.php?which=" + urlParams.which;
