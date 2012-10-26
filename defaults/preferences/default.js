@@ -1,2 +1,2 @@
-pref("extensions.pouet.extractAfterDownload",true);
-pref("extensions.pouet.runAfterExtract",true);
+pref("extensions.pouetcochon.extractAfterDownload",true);
+pref("extensions.pouetcochon.runAfterExtract",true);

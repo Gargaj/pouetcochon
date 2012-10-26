@@ -73,6 +73,11 @@ window.addEventListener('load', function () {
   var prefBranch      = prefs.getBranch("extensions.pouetcochon.");
   var fpHandler       = ioService.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
 
+  var privacyContext = window
+    .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+    .getInterface(Components.interfaces.nsIWebNavigation)
+    .QueryInterface(Components.interfaces.nsILoadContext);
+
   var defaultPerm = 0755;
 
   var LOG = Components.utils.reportError;
@@ -333,7 +338,8 @@ window.addEventListener('load', function () {
               null,
               null,
               null,
-              persist);
+              persist,
+              false);
             persist.progressListener = download;
             persist.saveURI(
               ioService.newURI(originalUrl, null, null),
@@ -341,7 +347,8 @@ window.addEventListener('load', function () {
               null,
               null,
               "",
-              localURI);
+              localURI,
+              privacyContext);
 
             myDownloads.push( {id:urlParams.which,dl:download,wnd:dlWnd,name:XMLgetNode(xml,"name")} );
 
