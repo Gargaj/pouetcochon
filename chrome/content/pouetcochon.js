@@ -322,7 +322,7 @@ window.addEventListener('load', function () {
             localPath = localPath.replace("[FIRSTLETTER]",sanitize(XMLgetNode(xml,"name").charAt(0)));
             localPath = localPath.replace("[GROUP]",sanitize(XMLgetNode(xml,"group")));
             localPath = localPath.replace("[PARTY]",sanitize(XMLgetNode(xml,"party")));
-            localPath = localPath.replace("[YEAR]",sanitize(XMLgetNode(xml,"date").substring( XMLgetNode(xml,"date").length - 4 )));
+            localPath = localPath.replace("[YEAR]",sanitize(XMLgetNode(xml,"date").substring( 0, 4 )));
             localPath = localPath.replace("[COMPO]",sanitize(XMLgetNode(xml,"compo")));
 
             var persist   = Components.classes['@mozilla.org/embedding/browser/nsWebBrowserPersist;1'].createInstance(Components.interfaces.nsIWebBrowserPersist);
