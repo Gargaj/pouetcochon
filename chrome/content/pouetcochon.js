@@ -20,9 +20,8 @@ window.addEventListener('load', function () {
   }
   
   function getDownload(a,dl) {
-    var i = a.length;
-    while (i--) {
-      if (a[i].dl === dl) return a[i];
+    for (var index in a) {
+      if (a[index].dl === dl) return index;
     }
     return null;
   }
@@ -64,7 +63,7 @@ window.addEventListener('load', function () {
            .toLowerCase();
   }
 
-  var myDownloads = [];
+  var myDownloads = {};
 
   var downloadManager = Components.classes["@mozilla.org/download-manager;1"]  .getService(Components.interfaces.nsIDownloadManager);
   var ioService       = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
@@ -103,8 +102,8 @@ window.addEventListener('load', function () {
         var dlObj = getDownload(myDownloads,dl);
         if (dlObj)
         {
-          arrayRemove( myDownloads, myDownloads.indexOf( dl ) );
-          dlObj.wnd.close();
+          myDownloads[dlObj].wnd.close();
+          delete myDownloads[dlObj];
         }
         return;
       }
@@ -113,9 +112,10 @@ window.addEventListener('load', function () {
         var dlObj = getDownload(myDownloads,dl);
         if (dlObj)
         {
-          dlObj.wnd.close();
+          myDownloads[dlObj].wnd.close();
+          delete myDownloads[dlObj];
 
-          arrayRemove( myDownloads, myDownloads.indexOf( dl ) );
+          //arrayRemove( myDownloads, myDownloads.indexOf( dl ) );
           if ( prefBranch.getBoolPref("extractAfterDownload") && dl.target.path.substring( dl.target.path.length - 4 ).toLowerCase() == ".zip")
           {
             var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"].createInstance(Components.interfaces.nsIZipReader);
@@ -222,17 +222,17 @@ window.addEventListener('load', function () {
       if (dlObj)
       {
         var f = sProg * 100 / sProgMax;
-        dlObj.wnd.document.title = "Downloading demo: " + dlObj.name + " ("+f.toFixed(2) + "%)";
+        myDownloads[dlObj].wnd.document.title = "Downloading demo: " + myDownloads[dlObj].name + " ("+f.toFixed(2) + "%)";
 
-        var progBar = dlObj.wnd.document.getElementById("downloadProgress");
+        var progBar = myDownloads[dlObj].wnd.document.getElementById("downloadProgress");
         progBar.value = f;
-        var progNum = dlObj.wnd.document.getElementById("downloadProgressNum");
+        var progNum = myDownloads[dlObj].wnd.document.getElementById("downloadProgressNum");
         progNum.value = f.toFixed(2) + "%";
-        var progFilename = dlObj.wnd.document.getElementById("downloadFilename");
+        var progFilename = myDownloads[dlObj].wnd.document.getElementById("downloadFilename");
         progFilename.value = dl.source.prePath + dl.source.path;
-        var progLocalFilename = dlObj.wnd.document.getElementById("downloadLocalFilename");
+        var progLocalFilename = myDownloads[dlObj].wnd.document.getElementById("downloadLocalFilename");
         progLocalFilename.value = dl.target.prePath + dl.target.path;
-        var progNumProg = dlObj.wnd.document.getElementById("downloadNumericProgress");
+        var progNumProg = myDownloads[dlObj].wnd.document.getElementById("downloadNumericProgress");
         progNumProg.value = sProg + " / " + sProgMax;
       }
     },
@@ -298,11 +298,18 @@ window.addEventListener('load', function () {
           alert("No valid filename found.");
           return true;
         }
-        LOG("before="+filename);
+        //LOG("before="+filename);
         filename = filename.replace(/[\?\*\\]/gi,"_");
-        LOG("after="+filename);
+        //LOG("after="+filename);
         
         var urlParams = parseQueryString( doc.location.search.substring(1) );
+        
+        if (myDownloads[urlParams.which])
+        {
+          myDownloads[urlParams.which].wnd.focus();
+          return;
+        }
+        
         var xnfoUrl = "http://www.pouet.net/export/prod.xnfo.php?which=" + urlParams.which;
 
         var dlWnd = window.openDialog(
@@ -355,7 +362,8 @@ window.addEventListener('load', function () {
               localURI,
               privacyContext);
 
-            myDownloads.push( {id:urlParams.which,dl:download,wnd:dlWnd,name:XMLgetNode(xml,"name")} );
+            //myDownloads.push( {id:urlParams.which,dl:download,wnd:dlWnd,name:XMLgetNode(xml,"name")} );
+            myDownloads[urlParams.which] = { id:urlParams.which, dl:download, wnd:dlWnd, name:XMLgetNode(xml,"name") };
 
             popup("PouëtCochon","Demo download started: " + filename);
 
