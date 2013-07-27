@@ -8,8 +8,9 @@ no license
 
 window.addEventListener('load', function () {
 
-  var LOG = console.log;
-  
+  //var LOG = Components.utils.reportError;
+  var LOG = function(str){};
+
   function popup(title, msg) {
     var image = null;
     var win = Components.classes['@mozilla.org/embedcomp/window-watcher;1'].
@@ -81,8 +82,6 @@ window.addEventListener('load', function () {
 
   var defaultPerm = 0755;
 
-  var LOG = Components.utils.reportError;
-
   if (prefBranch.prefHasUserValue("savePath") == false)
   {
     var desktop = dirService.get("Desk", Components.interfaces.nsIFile);
@@ -120,9 +119,11 @@ window.addEventListener('load', function () {
           {
             var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"].createInstance(Components.interfaces.nsIZipReader);
             var localFile = fpHandler.getFileFromURLSpec( dl.target.prePath + dl.target.path );
+            LOG("localFile = "+localFile);
             zipReader.open(localFile);
             var dir = localFile.parent.clone();
-            dir.append( localFile.leafName.replace(".zip","") );
+            dir.append( localFile.leafName.replace(/\.zip$/i,"") );
+            LOG("dir = "+dir.target);
             if (!dir.exists()) {
               dir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, defaultPerm);
             }
@@ -131,6 +132,7 @@ window.addEventListener('load', function () {
             var files = zipReader.findEntries(null);
             do {
               var fileString = files.getNext();
+              LOG("fileString = "+fileString);
               var entry = zipReader.getEntry(fileString);
               if (entry.isDirectory)
               {
@@ -149,6 +151,7 @@ window.addEventListener('load', function () {
             files = zipReader.findEntries(null);
             do {
               var fileString = files.getNext();
+              LOG("[extr] fileString = "+fileString);
               var entry = zipReader.getEntry(fileString);
               if (entry.isDirectory)
                 continue;
@@ -164,6 +167,7 @@ window.addEventListener('load', function () {
                 }
               }
 
+              LOG("[extr] loc = " + loc.target);
               zipReader.extract(fileString, loc);
 
               if (xulRuntime.OS == "WINNT")
