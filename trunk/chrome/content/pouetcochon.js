@@ -6,11 +6,12 @@ no license
 
 */
 
-window.addEventListener('load', function () {
+window.addEventListener('load', function () { Task.spawn(function () {
 
   //var LOG = Components.utils.reportError;
   var LOG = function(str){};
-
+  
+  LOG("test");
   function popup(title, msg) {
     var image = null;
     var win = Components.classes['@mozilla.org/embedcomp/window-watcher;1'].
@@ -26,12 +27,6 @@ window.addEventListener('load', function () {
     }
     return null;
   }
-  
-  function arrayRemove(a, from, to) {
-    var rest = a.slice((to || from) + 1 || a.length);
-    a.length = from < 0 ? a.length + from : from;
-    return a.push.apply(a, rest);
-  };
   
   
   function XMLgetNode(xml,str) {
@@ -64,9 +59,13 @@ window.addEventListener('load', function () {
            .toLowerCase();
   }
 
-  var myDownloads = {};
+  let myDownloads = {};
 
-  var downloadManager = Components.classes["@mozilla.org/download-manager;1"]  .getService(Components.interfaces.nsIDownloadManager);
+  LOG("import");
+  let {Downloads} = Components.utils.import("resource://gre/modules/Downloads.jsm");
+  LOG("Downloads = " + Downloads);
+  
+  //var downloadManager = Components.classes["@mozilla.org/download-manager;1"]  .getService(Components.interfaces.nsIDownloadManager);
   var ioService       = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
   var dirService      = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
   var prefs           = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
@@ -93,139 +92,149 @@ window.addEventListener('load', function () {
     prefBranch.setCharPref("savePath", path );
   }
 
-  downloadManager.addListener({
-    onDownloadStateChange : function(state, dl) {
-      if (dl.state == Components.interfaces.nsIDownloadManager.DOWNLOAD_CANCELED 
-       || dl.state == Components.interfaces.nsIDownloadManager.DOWNLOAD_FAILED)
+  LOG("fffuuu");
+  let (x = 10, y = 12) {
+    LOG(x+y);
+  }
+  let downloadList = yield Downloads.getList(Downloads.ALL);
+  LOG("getList = " + downloadList);
+  let addv = yield downloadList.addView({
+    onDownloadAdded: download => LOG("Added: " + download),
+    onDownloadRemoved: download => LOG("Removed: " + download),
+    onDownloadChanged: function(dl) {
+      var dlObj = getDownload(myDownloads,dl);
+      if (!dlObj)
+        return;
+        
+      if (dl.canceled)
       {
-        var dlObj = getDownload(myDownloads,dl);
-        if (dlObj)
-        {
-          myDownloads[dlObj].wnd.close();
-          delete myDownloads[dlObj];
-        }
+        LOG("cancel = " + dl.target.path);
+        myDownloads[dlObj].wnd.close();
+        delete myDownloads[dlObj];
         return;
       }
-      if (dl.state == Components.interfaces.nsIDownloadManager.DOWNLOAD_FINISHED)
+      else if (dl.succeeded)
       {
-        var dlObj = getDownload(myDownloads,dl);
-        if (dlObj)
+        LOG("succeeded = " + dl.target.path);
+        myDownloads[dlObj].wnd.close();
+        delete myDownloads[dlObj];
+
+        if ( prefBranch.getBoolPref("extractAfterDownload") && dl.target.path.substring( dl.target.path.length - 4 ).toLowerCase() == ".zip")
         {
-          myDownloads[dlObj].wnd.close();
-          delete myDownloads[dlObj];
+          var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"].createInstance(Components.interfaces.nsIZipReader);
 
-          //arrayRemove( myDownloads, myDownloads.indexOf( dl ) );
-          if ( prefBranch.getBoolPref("extractAfterDownload") && dl.target.path.substring( dl.target.path.length - 4 ).toLowerCase() == ".zip")
-          {
-            var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"].createInstance(Components.interfaces.nsIZipReader);
-            var localFile = fpHandler.getFileFromURLSpec( dl.target.prePath + dl.target.path );
-            LOG("localFile = "+localFile);
-            zipReader.open(localFile);
-            var dir = localFile.parent.clone();
-            dir.append( localFile.leafName.replace(/\.zip$/i,"") );
-            LOG("dir = "+dir.target);
-            if (!dir.exists()) {
-              dir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, defaultPerm);
-            }
-            var executables = [];
+          var localFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
+          localFile.initWithPath(dl.target.path);
 
-            var files = zipReader.findEntries(null);
-            do {
-              var fileString = files.getNext();
-              LOG("fileString = "+fileString);
-              var entry = zipReader.getEntry(fileString);
-              if (entry.isDirectory)
-              {
-                var fileComps = fileString.split(/[\\\/]/);
-                var loc = dir.clone();
-                for(var i = 0; i < fileComps.length; i++)
-                {
-                  loc.append(fileComps[i]);
-                  if (!loc.exists()) {
-                    loc.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, defaultPerm);
-                  }
-                }
-              }
-            } while (files.hasMore());
+          LOG("localFile = "+localFile);
+          zipReader.open(localFile);
+          var dir = localFile.parent.clone();
+          dir.append( localFile.leafName.replace(/\.zip$/i,"") );
+          LOG("dir = "+dir.target);
+          if (!dir.exists()) {
+            dir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, defaultPerm);
+          }
+          var executables = [];
 
-            files = zipReader.findEntries(null);
-            do {
-              var fileString = files.getNext();
-              LOG("[extr] fileString = "+fileString);
-              var entry = zipReader.getEntry(fileString);
-              if (entry.isDirectory)
-                continue;
-
+          var files = zipReader.findEntries(null);
+          do {
+            var fileString = files.getNext();
+            LOG("fileString = "+fileString);
+            var entry = zipReader.getEntry(fileString);
+            if (entry.isDirectory)
+            {
               var fileComps = fileString.split(/[\\\/]/);
-
               var loc = dir.clone();
               for(var i = 0; i < fileComps.length; i++)
               {
                 loc.append(fileComps[i]);
-                if (i < fileComps.length - 1 && !loc.exists()) {
+                if (!loc.exists()) {
                   loc.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, defaultPerm);
                 }
               }
+            }
+          } while (files.hasMore());
 
-              LOG("[extr] loc = " + loc.target);
-              zipReader.extract(fileString, loc);
+          files = zipReader.findEntries(null);
+          do {
+            var fileString = files.getNext();
+            LOG("[extr] fileString = "+fileString);
+            var entry = zipReader.getEntry(fileString);
+            if (entry.isDirectory)
+              continue;
 
-              if (xulRuntime.OS == "WINNT")
-              {
-                if (loc.leafName.substring( loc.leafName.length - 4 ).toLowerCase() == ".exe")
-                {
-                  executables.push(loc);
-                }
-              }
-              else
-              {
-                if (loc.isExecutable())
-                {
-                  executables.push(loc);
-                }
-              }
+            var fileComps = fileString.split(/[\\\/]/);
 
-            } while (files.hasMore());
-            if (prefBranch.getBoolPref("runAfterExtract"))
+            var loc = dir.clone();
+            for(var i = 0; i < fileComps.length; i++)
             {
-              if (executables.length == 1)
-              {
-                var process = Components.classes["@mozilla.org/process/util;1"].createInstance(Components.interfaces.nsIProcess);
-                var file    = executables[0];
-                var args    = [];
-                if (xulRuntime.OS == "WINNT")
-                {
-                  // we have to do this because nsiProcess doesn't allow changing the working directory, so we use start /D
-                  file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
-                  file.initWithPath( environment.get("ComSpec") );
-
-                  var cmd = 'start "" /D"' + dir.path + '" "' + executables[0].path + '"';
-                  args = ["/C", "start", "fake title", "/D", executables[0].parent.path, executables[0].path ];
-                }
-                process.init(file);
-                process.run(false, args, args.length);
-              }
-              else if (executables.length > 1)
-              {
-                if (confirm("More than one executable found - do you want to open the directory?"))
-                  executables[0].reveal();
-              }
-              else
-              {
-                alert("No executables found.");
+              loc.append(fileComps[i]);
+              if (i < fileComps.length - 1 && !loc.exists()) {
+                loc.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, defaultPerm);
               }
             }
-            zipReader.close();
+
+            LOG("[extr] loc = " + loc.target);
+            zipReader.extract(fileString, loc);
+
+            if (xulRuntime.OS == "WINNT")
+            {
+              if (loc.leafName.substring( loc.leafName.length - 4 ).toLowerCase() == ".exe")
+              {
+                executables.push(loc);
+              }
+            }
+            else
+            {
+              if (loc.isExecutable())
+              {
+                executables.push(loc);
+              }
+            }
+
+          } while (files.hasMore());
+          if (prefBranch.getBoolPref("runAfterExtract"))
+          {
+            if (executables.length == 1)
+            {
+              var process = Components.classes["@mozilla.org/process/util;1"].createInstance(Components.interfaces.nsIProcess);
+              var file    = executables[0];
+              var args    = [];
+              if (xulRuntime.OS == "WINNT")
+              {
+                // we have to do this because nsiProcess doesn't allow changing the working directory, so we use start /D
+                file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
+                file.initWithPath( environment.get("ComSpec") );
+
+                var cmd = 'start "" /D"' + dir.path + '" "' + executables[0].path + '"';
+                args = ["/C", "start", "fake title", "/D", executables[0].parent.path, executables[0].path ];
+              }
+              process.init(file);
+              process.run(false, args, args.length);
+            }
+            else if (executables.length > 1)
+            {
+              if (confirm("More than one executable found - do you want to open the directory?"))
+                executables[0].reveal();
+            }
+            else
+            {
+              alert("No executables found.");
+            }
           }
+          zipReader.close();
         }
-      }
-    },
-    onLocationChange : function(prog, req, loc, dl) { } ,
-    onProgressChange : function(prog, req, sProg, sProgMax, tProg, tProgMax, dl) {
-      var dlObj = getDownload(myDownloads,dl);
-      if (dlObj)
+      } 
+      else if (dl.error)
       {
-        var f = sProg * 100 / sProgMax;
+        dl.finalize();
+        alert( dl.error );
+        myDownloads[dlObj].wnd.close();
+        delete myDownloads[dlObj];
+      }
+      else
+      {
+        var f = dl.totalBytes ? (dl.currentBytes * 100.0 / dl.totalBytes) : 0.0;
         myDownloads[dlObj].wnd.document.title = "Downloading demo: " + myDownloads[dlObj].name + " ("+f.toFixed(2) + "%)";
 
         var progBar = myDownloads[dlObj].wnd.document.getElementById("downloadProgress");
@@ -233,19 +242,20 @@ window.addEventListener('load', function () {
         var progNum = myDownloads[dlObj].wnd.document.getElementById("downloadProgressNum");
         progNum.value = f.toFixed(2) + "%";
         var progFilename = myDownloads[dlObj].wnd.document.getElementById("downloadFilename");
-        progFilename.value = dl.source.prePath + dl.source.path;
+        progFilename.value = dl.source.url;
         var progLocalFilename = myDownloads[dlObj].wnd.document.getElementById("downloadLocalFilename");
-        progLocalFilename.value = dl.target.prePath + dl.target.path;
+        progLocalFilename.value = dl.target.path;
         var progNumProg = myDownloads[dlObj].wnd.document.getElementById("downloadNumericProgress");
-        progNumProg.value = sProg + " / " + sProgMax;
+        progNumProg.value = dl.currentBytes + " / " + dl.totalBytes;
       }
     },
-    onSecurityChange : function(prog, req, state, dl) { },
-    onStateChange : function(prog, req, flags, status, dl) { },
-    onStatusChange : function(prof, req, state, msg, dl) { },
   });
+  LOG("addView = " + addv);
 
-  document.getElementById("pouetcochonPreferencesMenu").addEventListener('click', function(ev) {
+  var e = document.getElementById("pouetcochonPreferencesMenu");
+  LOG("menu = " + e);
+  e.addEventListener('click', function(ev) {
+    LOG("evLis = " + ev);
     window.openDialog(
       'chrome://pouetcochon/content/preferences.xul',
       'pouetcochonPrefs',
@@ -324,61 +334,62 @@ window.addEventListener('load', function () {
 
         var xhr = new XMLHttpRequest();
         xhr.open("GET", xnfoUrl, true);
-        xhr.onreadystatechange = function(){
-          if (xhr.readyState == 4)
-          {
-            var xml = xhr.responseXML;
+        xhr.addEventListener("load", function(e) {
+          var xml = xhr.responseXML;
 
-            var localPath = prefBranch.getCharPref("savePath");
-            localPath = localPath.replace("[FIRSTLETTER]",sanitize(XMLgetNode(xml,"name").charAt(0)));
-            localPath = localPath.replace("[GROUP]",sanitize(XMLgetNode(xml,"group")));
-            localPath = localPath.replace("[PARTY]",sanitize(XMLgetNode(xml,"party")));
-            localPath = localPath.replace("[YEAR]",sanitize(XMLgetNode(xml,"date").substring( 0, 4 )));
-            localPath = localPath.replace("[COMPO]",sanitize(XMLgetNode(xml,"compo")));
+          var localPath = prefBranch.getCharPref("savePath");
+          localPath = localPath.replace("[FIRSTLETTER]",sanitize(XMLgetNode(xml,"name").charAt(0)));
+          localPath = localPath.replace("[GROUP]",sanitize(XMLgetNode(xml,"group")));
+          localPath = localPath.replace("[PARTY]",sanitize(XMLgetNode(xml,"party")));
+          localPath = localPath.replace("[YEAR]",sanitize(XMLgetNode(xml,"date").substring( 0, 4 )));
+          localPath = localPath.replace("[COMPO]",sanitize(XMLgetNode(xml,"compo")));
 
-            var persist   = Components.classes['@mozilla.org/embedding/browser/nsWebBrowserPersist;1'].createInstance(Components.interfaces.nsIWebBrowserPersist);
-            var localFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
+          //var persist   = Components.classes['@mozilla.org/embedding/browser/nsWebBrowserPersist;1'].createInstance(Components.interfaces.nsIWebBrowserPersist);
+          var localFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
 
-            localFile.initWithPath(localPath);
-            if (!localFile.exists()) {
-              localFile.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, defaultPerm);
-            }
-            localFile.append(filename);
-            var localURI = fpHandler.newFileURI(localFile);
-
-            var download = downloadManager.addDownload(
-              Components.interfaces.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
-              ioService.newURI(originalUrl, null, null),
-              localURI,
-              "Downloading demo: " + originalUrl,
-              null,
-              null,
-              null,
-              persist,
-              false);
-            persist.progressListener = download;
-            persist.saveURI(
-              ioService.newURI(originalUrl, null, null),
-              null,
-              null,
-              null,
-              "",
-              localURI,
-              privacyContext);
-
-            //myDownloads.push( {id:urlParams.which,dl:download,wnd:dlWnd,name:XMLgetNode(xml,"name")} );
-            myDownloads[urlParams.which] = { id:urlParams.which, dl:download, wnd:dlWnd, name:XMLgetNode(xml,"name") };
-
-            popup("PouëtCochon","Demo download started: " + filename);
-
+          localFile.initWithPath(localPath);
+          if (!localFile.exists()) {
+            localFile.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, defaultPerm);
           }
-        }
-        xhr.send(null);
+          localFile.append(filename);
+          var localURI = fpHandler.newFileURI(localFile);
+
+          LOG("originalUrl = " + originalUrl);
+          LOG("localURI = " + localFile);
+
+          Task.spawn(function () {
+            var download = yield Downloads.createDownload({
+              source: originalUrl,
+              target: localFile,
+            });
+            /*
+            download.onchange = function() { 
+              LOG("whee: " + download.currentBytes + " / " + download.totalBytes); 
+            }
+            */
+            downloadList.add(download);
+            myDownloads[urlParams.which] = { id:urlParams.which, dl:download, wnd:dlWnd, name:XMLgetNode(xml,"name") };
+            LOG("test = " + myDownloads[urlParams.which]);
+            LOG("test2 = " + Object.keys(myDownloads).length);
+            try 
+            {
+              download.start();
+              LOG("download.start()");
+            } 
+            finally 
+            {
+              popup("PouëtCochon","Demo download started: " + filename);
+            }
+            LOG("download = " + download);
+          }).then(null, Components.utils.reportError);
+
+        },false);
+        
+        xhr.send();
 
         evClick.preventDefault();
         return false;
       },false);
     }
   }, false)
-
-}, false);
+}).then(null, Components.utils.reportError); }, false);
