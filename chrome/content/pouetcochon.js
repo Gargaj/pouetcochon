@@ -31,7 +31,7 @@ window.addEventListener('load', function () { Task.spawn(function () {
   
   function XMLgetNode(xml,str) {
     var p = xml.getElementsByTagName(str);
-    if (p.length)
+    if (p.length && p[0].childNodes.length)
       return p[0].childNodes[0].nodeValue;
     return "_unknown_";
   }
@@ -92,32 +92,28 @@ window.addEventListener('load', function () { Task.spawn(function () {
     prefBranch.setCharPref("savePath", path );
   }
 
-  LOG("fffuuu");
-  let (x = 10, y = 12) {
-    LOG(x+y);
-  }
   let downloadList = yield Downloads.getList(Downloads.ALL);
   LOG("getList = " + downloadList);
   let addv = yield downloadList.addView({
     onDownloadAdded: download => LOG("Added: " + download),
     onDownloadRemoved: download => LOG("Removed: " + download),
     onDownloadChanged: function(dl) {
-      var dlObj = getDownload(myDownloads,dl);
-      if (!dlObj)
+      var dlID = getDownload(myDownloads,dl);
+      if (!dlID)
         return;
         
       if (dl.canceled)
       {
         LOG("cancel = " + dl.target.path);
-        myDownloads[dlObj].wnd.close();
-        delete myDownloads[dlObj];
+        myDownloads[dlID].wnd.close();
+        delete myDownloads[dlID];
         return;
       }
       else if (dl.succeeded)
       {
         LOG("succeeded = " + dl.target.path);
-        myDownloads[dlObj].wnd.close();
-        delete myDownloads[dlObj];
+        myDownloads[dlID].wnd.close();
+        delete myDownloads[dlID];
 
         if ( prefBranch.getBoolPref("extractAfterDownload") && dl.target.path.substring( dl.target.path.length - 4 ).toLowerCase() == ".zip")
         {
@@ -229,23 +225,23 @@ window.addEventListener('load', function () { Task.spawn(function () {
       {
         dl.finalize();
         alert( dl.error );
-        myDownloads[dlObj].wnd.close();
-        delete myDownloads[dlObj];
+        myDownloads[dlID].wnd.close();
+        delete myDownloads[dlID];
       }
       else
       {
         var f = dl.totalBytes ? (dl.currentBytes * 100.0 / dl.totalBytes) : 0.0;
-        myDownloads[dlObj].wnd.document.title = "Downloading demo: " + myDownloads[dlObj].name + " ("+f.toFixed(2) + "%)";
+        myDownloads[dlID].wnd.document.title = "Downloading demo: " + myDownloads[dlID].name + " ("+f.toFixed(2) + "%)";
 
-        var progBar = myDownloads[dlObj].wnd.document.getElementById("downloadProgress");
+        var progBar = myDownloads[dlID].wnd.document.getElementById("downloadProgress");
         progBar.value = f;
-        var progNum = myDownloads[dlObj].wnd.document.getElementById("downloadProgressNum");
+        var progNum = myDownloads[dlID].wnd.document.getElementById("downloadProgressNum");
         progNum.value = f.toFixed(2) + "%";
-        var progFilename = myDownloads[dlObj].wnd.document.getElementById("downloadFilename");
+        var progFilename = myDownloads[dlID].wnd.document.getElementById("downloadFilename");
         progFilename.value = dl.source.url;
-        var progLocalFilename = myDownloads[dlObj].wnd.document.getElementById("downloadLocalFilename");
+        var progLocalFilename = myDownloads[dlID].wnd.document.getElementById("downloadLocalFilename");
         progLocalFilename.value = dl.target.path;
-        var progNumProg = myDownloads[dlObj].wnd.document.getElementById("downloadNumericProgress");
+        var progNumProg = myDownloads[dlID].wnd.document.getElementById("downloadNumericProgress");
         progNumProg.value = dl.currentBytes + " / " + dl.totalBytes;
       }
     },
@@ -305,6 +301,7 @@ window.addEventListener('load', function () { Task.spawn(function () {
           var url = parseQueryString( link.href.substring( link.href.indexOf("?") + 1 ) );
           originalUrl = url.url;
         }
+        LOG("originalUrl = " + originalUrl);
         
         var filename = originalUrl.substring( originalUrl.lastIndexOf("/") + 1 );
         if (!filename.length)
@@ -312,9 +309,8 @@ window.addEventListener('load', function () { Task.spawn(function () {
           alert("No valid filename found.");
           return true;
         }
-        //LOG("before="+filename);
         filename = filename.replace(/[\?\*\\]/gi,"_");
-        //LOG("after="+filename);
+        LOG("filename = " + originalUrl);
         
         var urlParams = parseQueryString( doc.location.search.substring(1) );
         
@@ -339,10 +335,15 @@ window.addEventListener('load', function () { Task.spawn(function () {
 
           var localPath = prefBranch.getCharPref("savePath");
           localPath = localPath.replace("[FIRSTLETTER]",sanitize(XMLgetNode(xml,"name").charAt(0)));
+          LOG("localPath[1] = " + localPath);
           localPath = localPath.replace("[GROUP]",sanitize(XMLgetNode(xml,"group")));
+          LOG("localPath[2] = " + localPath);
           localPath = localPath.replace("[PARTY]",sanitize(XMLgetNode(xml,"party")));
+          LOG("localPath[3] = " + localPath);
           localPath = localPath.replace("[YEAR]",sanitize(XMLgetNode(xml,"date").substring( 0, 4 )));
+          LOG("localPath[4] = " + localPath);
           localPath = localPath.replace("[COMPO]",sanitize(XMLgetNode(xml,"compo")));
+          LOG("localPath[5] = " + localPath);
 
           //var persist   = Components.classes['@mozilla.org/embedding/browser/nsWebBrowserPersist;1'].createInstance(Components.interfaces.nsIWebBrowserPersist);
           var localFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
@@ -368,7 +369,8 @@ window.addEventListener('load', function () { Task.spawn(function () {
             }
             */
             downloadList.add(download);
-            myDownloads[urlParams.which] = { id:urlParams.which, dl:download, wnd:dlWnd, name:XMLgetNode(xml,"name") };
+            var name = XMLgetNode(xml,"name");
+            myDownloads[urlParams.which] = { id:urlParams.which, dl:download, wnd:dlWnd, name:name };
             LOG("test = " + myDownloads[urlParams.which]);
             LOG("test2 = " + Object.keys(myDownloads).length);
             try 
@@ -380,6 +382,17 @@ window.addEventListener('load', function () { Task.spawn(function () {
             {
               popup("PouëtCochon","Demo download started: " + filename);
             }
+            /*
+            dlWnd.onbeforeunload = function()
+            {
+              if (confirm("Do you want to cancel the download for " + name + "?"))
+              {
+                download.cancel();
+                LOG("cancelled = " + download.target.path);
+              }
+              //delete myDownloads[urlParams.which];
+            }
+            */
             LOG("download = " + download);
           }).then(null, Components.utils.reportError);
 
