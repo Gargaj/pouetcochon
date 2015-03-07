@@ -301,6 +301,11 @@ window.addEventListener('load', function () { Task.spawn(function () {
           var url = parseQueryString( link.href.substring( link.href.indexOf("?") + 1 ) );
           originalUrl = url.url;
         }
+        else if (link.href.indexOf("files.scene.org/view") != -1)
+        {
+          var url = link.href.replace("files.scene.org/view","files.scene.org/get");
+          //originalUrl = url;
+        }
         LOG("originalUrl = " + originalUrl);
         
         var filename = originalUrl.substring( originalUrl.lastIndexOf("/") + 1 );
