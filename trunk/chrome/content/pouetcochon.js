@@ -65,7 +65,6 @@ window.addEventListener('load', function () { Task.spawn(function () {
   let {Downloads} = Components.utils.import("resource://gre/modules/Downloads.jsm");
   LOG("Downloads = " + Downloads);
   
-  //var downloadManager = Components.classes["@mozilla.org/download-manager;1"]  .getService(Components.interfaces.nsIDownloadManager);
   var ioService       = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
   var dirService      = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
   var prefs           = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
