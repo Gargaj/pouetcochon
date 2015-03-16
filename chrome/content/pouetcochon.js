@@ -303,7 +303,7 @@ window.addEventListener('load', function () { Task.spawn(function () {
         else if (link.href.indexOf("files.scene.org/view") != -1)
         {
           var url = link.href.replace("files.scene.org/view","files.scene.org/get");
-          //originalUrl = url;
+          originalUrl = url;
         }
         LOG("originalUrl = " + originalUrl);
         
